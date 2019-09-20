@@ -1,0 +1,40 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<!DOCTYPE KDevPrjSession>
+<KDevPrjSession>
+ <DocsAndViews NumberOfDocuments="3" >
+  <Doc0 NumberOfViews="1" URL="file:/home/andreas/develop/deska/src/deskaview.cpp" >
+   <View0 line="765" Type="???" >
+    <AdditionalSettings Top="1" Width="956" Attach="1" Height="497" Left="1" MinMaxMode="0" />
+   </View0>
+  </Doc0>
+  <Doc1 NumberOfViews="1" URL="file:/home/andreas/develop/deska/src/deska.cpp" >
+   <View0 line="652" Type="???" >
+    <AdditionalSettings Top="1" Width="956" Attach="1" Height="497" Left="1" MinMaxMode="0" />
+   </View0>
+  </Doc1>
+  <Doc2 NumberOfViews="1" URL="file:/home/andreas/develop/deska/src/deskaview.h" >
+   <View0 line="104" Type="???" >
+    <AdditionalSettings Top="1" Width="956" Attach="1" Height="497" Left="1" MinMaxMode="0" />
+   </View0>
+  </Doc2>
+ </DocsAndViews>
+ <pluginList>
+  <kdevvalgrind>
+   <executable path="" params="" />
+   <valgrind path="" params="" />
+  </kdevvalgrind>
+  <kdevsubversion>
+   <subversion recurseresolve="1" recurserelocate="1" recursemerge="1" recursecommit="1" base="" recursepropget="1" recurseswitch="1" recurseupdate="1" recursepropset="1" recursediff="1" recurserevert="1" forcemove="1" recursecheckout="1" forceremove="1" recurseadd="1" recurseproplist="1" forcemerge="1" />
+  </kdevsubversion>
+  <kdevdebugger>
+   <breakpointList>
+    <breakpoint0 location="/home/andreas/develop/deska/src/deska.cpp:346" type="1" condition="" enabled="1" />
+    <breakpoint1 location="/home/andreas/develop/deska/src/deskaview.cpp:762" type="1" condition="" enabled="1" />
+    <breakpoint2 location="/home/andreas/develop/deska/src/deskaview.cpp:824" type="1" condition="" enabled="1" />
+   </breakpointList>
+  </kdevdebugger>
+  <kdevbookmarks>
+   <bookmarks/>
+  </kdevbookmarks>
+ </pluginList>
+</KDevPrjSession>

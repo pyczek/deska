@@ -1,0 +1,294 @@
+/***************************************************************************
+                          global.cpp  -  description
+                             -------------------
+    begin                : Thu Oct 12 2000
+    copyright            : (C) 2000 by Andreas Jan Pyka
+    email                : andreas.pyka@matikon.de
+ ***************************************************************************/
+
+/***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+
+#include "global.h"
+
+#include <qfile.h>
+#include <qtextstream.h>
+#include <stdlib.h>
+#include <qfileinfo.h>
+#include <qregexp.h>
+
+/* global settings */
+int g_xpos, g_ypos, g_width, g_height;
+int MAX_TAGS;
+QString *g_tags, g_header, g_7tags;
+QString g_root, g_pieces;
+int		g_hatched;
+QString g_w_color, g_b_color;
+int g_transparent, g_frame;
+QString g_notation;
+QStrList g_recentEngine, g_activeEngine, g_fileName;
+
+void setTags()
+{
+	MAX_TAGS=g_header.contains(',');
+	g_tags = new QString[MAX_TAGS];
+
+	int pos=-1,oldPos;
+	for(int i=0;i<MAX_TAGS;i++)
+	{
+		oldPos=pos;
+		pos=g_header.find(',',oldPos+1);
+		if(pos==-1)break;
+		g_tags[i]=g_header.mid(oldPos+1,pos-oldPos-1);
+	}
+}
+
+QString extractFilename(QString path)
+{
+	QFileInfo i(path);
+	return i.baseName();
+}
+
+/*---------------------------------------------------------*
+ *		get the value for the tag=tag in s                   *
+ *---------------------------------------------------------*/		
+QString extractTag(QString s, QString tag)
+{
+	QString d=0;	
+	int pos,tagPos,len;
+
+	tag="["+tag;
+	if((tagPos=s.find(tag,0,false))!=-1)
+		if((pos=s.find(QRegExp("[\"\t]"), tagPos))!=-1)
+			if(((len=s.find(0x22,pos+1,false))!=-1)||((len=s.find("]",pos+1,false))!=-1))
+				d=s.mid(pos+1,len-pos-1);
+
+	d=d.simplifyWhiteSpace();
+
+	return d;
+}
+
+QString stripComment(QString src)
+{
+		int s=0,e;
+	
+		for(;;)
+		{
+			if((e=src.find("}",0))==-1)return src;
+			if((s=src.findRev("{",e-1))==-1)return src;
+			src=src.left(s-1)+src.right(src.length()-e-1);
+		}
+		return src;
+}
+
+QString stripVariation(QString src)
+{
+		int s=0,e;
+	
+		for(;;)
+		{
+			if((e=src.find(")",0))==-1)return src;
+			if((s=src.findRev("(",e-1))==-1)return src;
+			src=src.left(s-1)+src.right(src.length()-e-1);
+		}
+		return src;
+}
+
+void setStdSettings()
+{	
+	g_xpos = g_ypos = 50;
+	g_width = 600; g_height = 600;
+
+	g_frame = true;
+	g_hatched = true;
+	g_w_color = "WhiteSmoke";
+	g_b_color = "#f9e9ca";
+	g_transparent = false;
+	g_pieces = "berlin37";	
+	g_root="/usr/local";
+	g_fileName.clear();
+  g_recentEngine.clear();
+	g_activeEngine.clear();
+	g_notation="LONG";
+	
+	//tags	
+	g_7tags="White,Black,Site,Event,Date,Result,Round,";//7 tag roaster, always needed
+	g_header=g_7tags;
+	MAX_TAGS=g_header.contains(',');
+	g_tags = new QString[MAX_TAGS];
+	int pos=-1,oldPos;
+	for(int i=0;i<MAX_TAGS;i++)
+	{
+		oldPos=pos;
+		pos=g_header.find(',',oldPos+1);
+		if(pos==-1)break;
+		g_tags[i]=g_header.mid(oldPos+1,pos-oldPos-1);
+	}	
+}
+
+void loadSettings()
+{
+	QString v,n,l,fn(getenv( "HOME" ));
+	fn+="/.deskarc";
+	QFile optFile(fn);
+	int pos;	
+
+	if(optFile.exists())
+	{
+		optFile.open(IO_ReadOnly);
+		QTextStream t( &optFile );
+				
+		while(!t.eof())
+	  {
+			l=t.readLine();
+			if(l.mid(0,1)!='#')
+			{
+				if((pos=l.find('='))!=-1)
+				{
+					n=l.mid(0,pos);
+					n.stripWhiteSpace();
+					v=l.mid(pos+1,l.length()-pos-1);
+					v.stripWhiteSpace();
+
+          if(n=="PIECES")g_pieces=v;
+ 					if(n=="DESKA_ROOT")g_root=v;
+ 					if(n=="XPOS")g_xpos=v.toInt();
+ 					if(n=="YPOS")g_ypos=v.toInt();
+ 					if(n=="WIDTH")g_width=v.toInt();
+ 					if(n=="HEIGHT")g_height=v.toInt();                                        
+					if(n=="PGN_FILE"){g_fileName.append(v);}
+					if(n=="RECENT_ENGINE"){g_recentEngine.append(v);}
+					if(n=="ACTIVE_ENGINE"){g_activeEngine.append(v);}
+					if(n=="HATCHED")g_hatched=v.toInt();
+					if(n=="W_COLOR")g_w_color=v;
+					if(n=="B_COLOR")g_b_color=v;
+					if(n=="TRANSPARENT")g_transparent=v.toInt();
+					if(n=="FRAME")g_frame=v.toInt();
+					if(n=="NOTATION")g_notation=v;
+					if(n=="HEADER")g_header=v;
+				}
+			}
+		}
+						
+		optFile.close();	
+		setTags();
+	}
+ 	else
+	{
+		setTags();
+		saveSettings();
+	}
+}
+
+void saveSettings()
+{
+	QString v,fn(getenv( "HOME" ));
+	fn+="/.deskarc";
+	QFile optFile(fn);
+
+	if(optFile.exists())
+	{
+		if(!optFile.remove())fprintf(stderr,"saveSettings()->remove()");
+	}
+	
+	if(!optFile.open(IO_WriteOnly))fprintf(stderr,"saveSettings()->open()");
+	QTextStream t( &optFile );
+			
+	t << "#This file was generated by Deska (" << QDateTime::currentDateTime(Qt::LocalTime).toString("yyyy.MM.dd hh:mm") << "). Do not edit!\n";	
+	t << "\n#Global\n";
+	t << "DESKA_ROOT="	<< g_root << "\n";				
+	t	<<	"NOTATION="		<< g_notation	<< "\n";
+	t	<<	"XPOS="		<< g_xpos	<< "\n";
+	t	<<	"YPOS="		<< g_ypos	<< "\n";
+	t	<<	"WIDTH="		<< g_width	<< "\n";
+	t	<<	"HEIGHT="		<< g_height	<< "\n";          
+	t << "\n#List\n";
+	t << "HEADER="		<< g_header << "\n";			
+	t << "\n#Board\n";
+	t << "PIECES=" 			<< g_pieces << "\n";
+	t << "HATCHED=" 			<< g_hatched << "\n";
+	t << "W_COLOR=" 			<< g_w_color << "\n";
+	t << "B_COLOR=" 			<< g_b_color << "\n";	
+	t << "TRANSPARENT="		<< g_transparent << "\n";
+	t << "FRAME="		<< g_frame << "\n";
+	
+	t << "\n#Files\n";	
+	if(g_fileName.first())		
+	do{t << "PGN_FILE=" << g_fileName.current() << "\n";}while(g_fileName.next());
+
+	t << "\n#Recent engines\n";	
+	if(g_recentEngine.first())
+	  do{t << "RECENT_ENGINE=" << g_recentEngine.current() << "\n";}while(g_recentEngine.next());
+
+	t << "\n#Active engines\n";		
+	if(g_activeEngine.first())
+		do{t << "ACTIVE_ENGINE=" << g_activeEngine.current() << "\n";}while(g_activeEngine.next());
+	
+  optFile.close();	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
